@@ -1,0 +1,586 @@
+#include <iostream> 
+#include <fstream> 
+#include <string> 
+#include <iomanip> 
+using namespace std; 
+ 
+// =========================== Patient Node (Linked List) =========================== 
+/** 
+* @brief Represents a patient in the hospital system. 
+*/ 
+struct Patient { 
+int id; 
+string name; 
+int age; 
+string ailment; 
+Patient* next; 
+ 
+/** 
+* @brief Constructor to initialize a Patient node. 
+* @param id Unique identifier for the patient. 
+* @param name Name of the patient. 
+* @param age Age of the patient. 
+* @param ailment Ailment of the patient. 
+*/ 
+Patient(int id, string name, int age, string ailment) 
+: id(id), name(name), age(age), ailment(ailment), next(nullptr) {} 
+}; 
+ 
+ 
+// =========================== Doctor Node (Linked List) =========================== 
+/** 
+* @brief Represents a doctor in the hospital system. 
+*/ 
+struct Doctor { 
+int id; 
+string name; 
+string specialization; 
+Doctor* next; 
+ 
+/** 
+* @brief Constructor to initialize a Doctor node. 
+* @param id Unique identifier for the doctor. 
+* @param name Name of the doctor. 
+* @param specialization Specialization of the doctor. 
+*/ 
+Doctor(int id, string name, string specialization) 
+: id(id), name(name), specialization(specialization), next(nullptr) {} 
+}; 
+ 
+ 
+// =========================== Appointment Node (Queue) ============================ 
+/** 
+* @brief Represents an appointment in the hospital system. 
+*/ 
+struct Appointment { 
+int appointmentId; 
+int patientId; 
+int doctorId; 
+string date; 
+string time; 
+Appointment* next; 
+ 
+ 
+/** 
+* @brief Constructor to initialize an Appointment node. 
+* @param appointmentId Unique identifier for the appointment. 
+* @param patientId Patient ID associated with the appointment. 
+* @param doctorId Doctor ID associated with the appointment. 
+* @param date Date of the appointment. 
+* @param time Time of the appointment. 
+*/ 
+Appointment(int appointmentId, int patientId, int doctorId, string date, string time) 
+: appointmentId(appointmentId), patientId(patientId), doctorId(doctorId), date(date), time(time), 
+next(nullptr) {} 
+}; 
+ 
+ 
+// =========================== Global Pointers =========================== 
+Patient* patientHead = nullptr; 
+Doctor* doctorHead = nullptr; 
+ 
+// Queue for appointments 
+/** 
+* @brief Represents a queue for managing appointments. 
+*/ 
+struct AppointmentQueue { 
+Appointment* front = nullptr; 
+Appointment* rear = nullptr; 
+/** 
+* @brief Adds a new appointment to the queue. 
+* @param newAppointment Pointer to the appointment to be added. 
+*/ 
+void enqueue(Appointment* newAppointment) { 
+if (rear == nullptr) { 
+front = rear = newAppointment; 
+} 
+else { 
+rear->next = newAppointment; 
+rear = newAppointment; 
+} 
+cout << "Appointment scheduled successfully!\n"; 
+} 
+ 
+ 
+/** 
+* @brief Removes the front appointment from the queue. 
+*/ 
+void dequeue() { 
+if (front == nullptr) { 
+cout << "No appointments to serve.\n"; 
+return; 
+} 
+Appointment* temp = front; 
+front = front->next; 
+if (front == nullptr) rear = nullptr; 
+cout << "Serving appointment ID: " << temp->appointmentId << endl; 
+delete temp; 
+} 
+ 
+ 
+/** 
+* @brief Displays all appointments in the queue. 
+*/ 
+void displayQueue() { 
+if (front == nullptr) { 
+cout << "No appointments to display.\n"; 
+return; 
+} 
+cout << left << setw(12) << "Appt ID" << setw(12) << "Pat ID" 
+<< setw(12) << "Doc ID" << setw(12) << "Date" << "Time" << endl; 
+Appointment* temp = front; 
+while (temp) { 
+cout << left << setw(12) << temp->appointmentId 
+<< setw(12) << temp->patientId 
+<< setw(12) << temp->doctorId 
+<< setw(12) << temp->date 
+<< temp->time << endl; 
+temp = temp->next; 
+} 
+} 
+} appointmentQueue; 
+ 
+ 
+// =========================== File Handling Functions =========================== 
+/** 
+* @brief Saves patient, doctor, and appointment data to files. 
+*/ 
+void saveData(); 
+/** 
+* @brief Loads patient, doctor, and appointment data from files. 
+*/ 
+void loadData(); 
+ 
+ 
+// ======================== Function Prototypes ====================== 
+ 
+ 
+/** 
+* @brief Adds a new patient to the system. 
+*/ 
+void addPatient(); 
+ 
+ 
+/** 
+* @brief Displays all patients in the system. 
+*/ 
+void displayPatients(); 
+ 
+ 
+/** 
+* @brief Searches for a patient by ID. 
+*/ 
+void searchPatientByID(); 
+ 
+ 
+/** 
+* @brief Deletes a patient record from the system. 
+*/ 
+void deletePatient(); 
+ 
+ 
+/** 
+* @brief Adds a new doctor to the system. 
+*/ 
+void addDoctor(); 
+ 
+ 
+/** 
+* @brief Displays all doctors in the system. 
+*/ 
+void displayDoctors(); 
+ 
+ 
+/** 
+* @brief Searches for doctors by specialization. 
+*/ 
+void searchDoctorBySpecialization(); 
+ 
+ 
+/** 
+* @brief Schedules a new appointment. 
+*/ 
+void scheduleAppointment(); 
+ 
+ 
+/** 
+* @brief Serves the next appointment in the queue. 
+*/ 
+void serveAppointment(); 
+ 
+ 
+/** 
+* @brief Displays all upcoming appointments. 
+*/ 
+void displayAppointments(); 
+/** 
+* @brief Displays statistics about the hospital. 
+*/ 
+void displayStatistics(); 
+ 
+ 
+// ============================= Main Menu ============================== 
+/** 
+* @brief Entry point for the Hospital Management System. 
+* @return 0 on successful execution. 
+*/ 
+int main() { 
+loadData(); 
+int choice; 
+do { 
+cout << "\n=========== Hospital Management System ===========\n"; 
+cout << "1. Add Patient\n2. View Patients\n3. Search Patient by ID\n"; 
+cout << "4. Delete Patient\n5. Add Doctor\n6. View Doctors\n"; 
+cout << "7. Search Doctor by Specialization\n8. Schedule Appointment\n"; 
+cout << "9. Serve Appointment\n10. View Appointments\n"; 
+cout << "11. Hospital Statistics\n12. Exit\n"; 
+cout << "Enter your choice: "; 
+cin >> choice; 
+ 
+ 
+switch (choice) { 
+case 1: addPatient(); break; 
+case 2: displayPatients(); break; 
+case 3: searchPatientByID(); break; 
+case 4: deletePatient(); break; 
+case 5: addDoctor(); break; 
+case 6: displayDoctors(); break; 
+case 7: searchDoctorBySpecialization(); break; 
+case 8: scheduleAppointment(); break; 
+case 9: serveAppointment(); break; 
+case 10: displayAppointments(); break; 
+case 11: displayStatistics(); break; 
+case 12: cout << "Saving Data And Exiting...\n"; saveData(); break; 
+default: cout << "Invalid choice! Try again.\n"; 
+} 
+} while (choice != 12); 
+return 0; 
+} 
+ 
+ 
+// ======================== Patient Management ========================= 
+/** 
+* @brief Adds a new patient record. 
+*/ 
+void addPatient() { 
+int id, age; 
+string name, ailment; 
+ 
+ 
+cout << "Enter Patient ID: "; 
+cin >> id; 
+cout << "Enter Name: "; 
+cin.ignore(); 
+getline(cin, name); 
+cout << "Enter Age: "; 
+cin >> age; 
+cout << "Enter Ailment: "; 
+cin.ignore(); 
+getline(cin, ailment); 
+ 
+Patient* newPatient = new Patient(id, name, age, ailment); 
+newPatient->next = patientHead; 
+patientHead = newPatient; 
+cout << "Patient added successfully!\n"; 
+} 
+ 
+ 
+/** 
+* @brief Displays all patient records. 
+*/ 
+void displayPatients() { 
+if (patientHead == nullptr) { 
+cout << "No patients to display.\n"; 
+return; 
+} 
+cout << left << setw(10) << "ID" << setw(20) << "Name" 
+<< setw(5) << "Age" << "Ailment" << endl; 
+Patient* temp = patientHead; 
+while (temp) { 
+cout << left << setw(10) << temp->id 
+<< setw(20) << temp->name 
+<< setw(5) << temp->age 
+<< temp->ailment << endl; 
+temp = temp->next; 
+} 
+} 
+/** 
+* @brief Searches for a patient by their unique ID. 
+*/ 
+void searchPatientByID() { 
+int id; 
+cout << "Enter Patient ID to search: "; 
+cin >> id; 
+ 
+Patient* temp = patientHead; 
+while (temp) { 
+if (temp->id == id) { 
+cout << "Patient Found:\n"; 
+cout << left << setw(10) << "ID" << setw(20) << "Name" 
+<< setw(5) << "Age" << "Ailment" << endl; 
+cout << left << setw(10) << temp->id << setw(20) << temp->name 
+<< setw(5) << temp->age << temp->ailment << endl; 
+return; 
+} 
+temp = temp->next; 
+} 
+cout << "Patient not found.\n"; 
+} 
+ 
+ 
+/** 
+* @brief Deletes a patient record based on their unique ID. 
+*/ 
+void deletePatient() { 
+int id; 
+cout << "Enter Patient ID to delete: "; 
+cin >> id; 
+ 
+ 
+Patient* temp = patientHead; 
+Patient* prev = nullptr; 
+ 
+while (temp) { 
+if (temp->id == id) { 
+if (prev) 
+prev->next = temp->next; 
+else 
+patientHead = temp->next; 
+ 
+ 
+delete temp; 
+cout << "Patient record deleted successfully.\n"; 
+return; 
+} 
+prev = temp; 
+temp = temp->next; 
+} 
+cout << "Patient not found.\n"; 
+} 
+ 
+ 
+// ======================== Doctor Management ========================== 
+/** 
+* @brief Adds a new doctor record. 
+*/ 
+void addDoctor() { 
+int id; 
+string name, specialization; 
+cout << "Enter Doctor ID: "; 
+cin >> id; 
+cout << "Enter Name: "; 
+cin.ignore(); 
+getline(cin, name); 
+cout << "Enter Specialization: "; 
+getline(cin, specialization); 
+ 
+Doctor* newDoctor = new Doctor(id, name, specialization); 
+newDoctor->next = doctorHead; 
+doctorHead = newDoctor; 
+cout << "Doctor added successfully!\n"; 
+} 
+ 
+ 
+/** 
+* @brief Displays all doctor records. 
+*/ 
+void displayDoctors() { 
+if (doctorHead == nullptr) { 
+cout << "No doctors to display.\n"; 
+return; 
+} 
+cout << left << setw(10) << "ID" << setw(20) << "Name" 
+<< "Specialization" << endl; 
+Doctor* temp = doctorHead; 
+while (temp) { 
+cout << left << setw(10) << temp->id 
+<< setw(20) << temp->name 
+<< temp->specialization << endl; 
+temp = temp->next; 
+} 
+} 
+ 
+ 
+/** 
+* @brief Searches for doctors based on their specialization. 
+*/ 
+void searchDoctorBySpecialization() { 
+string specialization; 
+cout << "Enter specialization to search: "; 
+cin.ignore(); 
+getline(cin, specialization); 
+ 
+ 
+Doctor* temp = doctorHead; 
+cout << "Doctors with specialization \"" << specialization << "\":\n"; 
+while (temp) { 
+if (temp->specialization == specialization) { 
+cout << left << setw(10) << temp->id 
+<< setw(20) << temp->name 
+<< temp->specialization << endl; 
+} 
+temp = temp->next; 
+} 
+} 
+ 
+ 
+// ====================== Appointment Management ======================= 
+/** 
+* @brief Schedules a new appointment by adding it to the queue. 
+*/ 
+void scheduleAppointment() { 
+int appointmentId, patientId, doctorId; 
+string date, time; 
+ 
+cout << "Enter Appointment ID: "; 
+cin >> appointmentId; 
+cout << "Enter Patient ID: "; 
+cin >> patientId; 
+cout << "Enter Doctor ID: "; 
+cin >> doctorId; 
+cout << "Enter Date (YYYY-MM-DD): "; 
+cin >> date; 
+cout << "Enter Time (HH:MM): "; 
+cin >> time; 
+ 
+Appointment* newAppointment = new Appointment(appointmentId, patientId, doctorId, date, time); 
+appointmentQueue.enqueue(newAppointment); 
+} 
+ 
+ 
+/** 
+* @brief Serves the next appointment by removing it from the queue. 
+*/ 
+void serveAppointment() { 
+appointmentQueue.dequeue(); 
+} 
+ 
+ 
+/** 
+* @brief Displays all upcoming appointments in the queue. 
+*/ 
+void displayAppointments() { 
+appointmentQueue.displayQueue(); 
+} 
+ 
+ 
+// ========================= Hospital Statistics ========================= 
+/** 
+* @brief Displays statistics such as total patients, doctors, and appointments. 
+*/ 
+void displayStatistics() { 
+int patientCount = 0, doctorCount = 0, appointmentCount = 0; 
+ 
+ 
+Patient* pTemp = patientHead; 
+while (pTemp) { 
+patientCount++; 
+pTemp = pTemp->next; 
+} 
+ 
+ 
+Doctor* dTemp = doctorHead; 
+while (dTemp) { 
+doctorCount++; 
+dTemp = dTemp->next; 
+} 
+ 
+ 
+Appointment* aTemp = appointmentQueue.front; 
+while (aTemp) { 
+appointmentCount++; 
+aTemp = aTemp->next; 
+} 
+cout << "\nHospital Statistics:\n"; 
+cout << "Total Patients: " << patientCount << "\n"; 
+cout << "Total Doctors: " << doctorCount << "\n"; 
+cout << "Upcoming Appointments: " << appointmentCount << "\n"; 
+} 
+ 
+ 
+// ====================== File Handling Implementation ====================== 
+void saveData() { 
+// Save patients to a file 
+ofstream patientFile("patients.txt"); 
+Patient* pTemp = patientHead; 
+while (pTemp) { 
+patientFile << pTemp->id << " " << pTemp->name << " " << pTemp->age << " " << pTemp->ailment 
+<< endl; 
+pTemp = pTemp->next; 
+} 
+patientFile.close(); 
+ 
+ 
+// Save doctors to a file 
+ofstream doctorFile("doctors.txt"); 
+Doctor* dTemp = doctorHead; 
+while (dTemp) { 
+doctorFile << dTemp->id << " " << dTemp->name << " " << dTemp->specialization << endl; 
+dTemp = dTemp->next; 
+} 
+doctorFile.close(); 
+ 
+ 
+// Save appointments to a file 
+ofstream appointmentFile("appointments.txt"); 
+Appointment* aTemp = appointmentQueue.front; 
+while (aTemp) { 
+appointmentFile << aTemp->appointmentId << " " << aTemp->patientId << " " << aTemp->doctorId 
+<< " " 
+<< aTemp->date << " " << aTemp->time << endl; 
+aTemp = aTemp->next; 
+} 
+appointmentFile.close(); 
+ 
+ 
+cout << "Data saved successfully!\n"; 
+} 
+ 
+ 
+void loadData() { 
+// Load patients from a file 
+ifstream patientFile("patients.txt"); 
+if (patientFile.is_open()) { 
+int id, age; 
+string name, ailment; 
+while (patientFile >> id) { 
+patientFile.ignore(); 
+getline(patientFile, name, ' '); 
+patientFile >> age >> ailment; 
+Patient* newPatient = new Patient(id, name, age, ailment); 
+newPatient->next = patientHead; 
+patientHead = newPatient; 
+} 
+patientFile.close(); 
+} 
+// Load doctors from a file 
+ifstream doctorFile("doctors.txt"); 
+if (doctorFile.is_open()) { 
+int id; 
+string name, specialization; 
+while (doctorFile >> id) { 
+doctorFile.ignore(); 
+getline(doctorFile, name, ' '); 
+getline(doctorFile, specialization, ' '); 
+Doctor* newDoctor = new Doctor(id, name, specialization); 
+newDoctor->next = doctorHead; 
+doctorHead = newDoctor; 
+} 
+doctorFile.close(); 
+} 
+ 
+ 
+// Load appointments from a file 
+ifstream appointmentFile("appointments.txt"); 
+if (appointmentFile.is_open()) { 
+int appointmentId, patientId, doctorId; 
+string date, time; 
+while (appointmentFile >> appointmentId >> patientId >> doctorId >> date >> time) { 
+Appointment* newAppointment = new Appointment(appointmentId, patientId, doctorId, date, 
+time); 
+appointmentQueue.enqueue(newAppointment); 
+} 
+appointmentFile.close(); 
+} 
+cout << "Data loaded successfully!\n"; 
+} 
